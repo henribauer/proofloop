@@ -1,0 +1,14 @@
+# iCloud conflict copies (same patterns as the workspace root .gitignore)
+* 2
+* 3
+* 2.*
+* 3.*
+* 2/
+* 3/
+
+.DS_Store
+node_modules
+dist
+.env
+.env.*
+!.env.example
