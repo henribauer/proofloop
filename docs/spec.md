@@ -1,6 +1,6 @@
 # Proofloop — spec
 
-Status: step 1 (grill), 20261026; steps 0 and 0b done, all research verdicts picked. Requirements: `BRIEF.md`
+Status: spec approved by Henri 20261027 (steps 0, 0b, 1, 3 done); ticket 01 in build. Requirements: `BRIEF.md`
 (Henri, verbatim).
 Track: new project with UI → steps 0–10 + design track D0–D7.
 
@@ -160,6 +160,117 @@ Paths under `~/claude`. Nothing for Supabase, PWA, Lighthouse, axe, Zod, promptf
 4. **Human tests:** what N, and what result counts as "failure", fixed before testing?
 5. **Haircut** on user-entered minutes saved: what value, labelled as judgment?
 
+## Grill (step 1)
+
+Goal (Claude's restatement, 20261026): Proofloop audits one public enquiry journey, links every finding to
+inspectable evidence, recommends the simplest fix that works (no change, UX, rules/n8n, integration, AI) and shows
+savings deterministically from labelled inputs. A fictional business proves the whole loop: evidence → finding →
+change built in n8n → measured comparison, including one recommendation that does not pay off. v1 runs locally by
+20270115 as a portfolio piece for fintech product/strategy interviews.
+
+Process note: step 0 missed the design part of D0 (Henri's design directions: a feel in 2–3 words plus one app he'd
+point to). It is caught up at the start of the design grill (D1), before any Mobbin references.
+
+### Decisions
+
+(one line per answered question: question, answer, date)
+
+- **Q1 Demo business** (20261026): a fictional independent mortgage and insurance broker in Berlin. Journey: website
+  enquiry → qualification (income, property, timing) → advice appointment. Enquiry handling only, never advice;
+  every name invented and labelled fictional, no resemblance to a real firm.
+- **Q2 Live audit scope** (20261026): a private allow-list Henri approves domain by domain, max 5 pages per audit.
+  Personal data is cut out before anything is saved, raw data is deleted after a set retention time, robots.txt
+  is respected. Real-company audits stay on Henri's machine and never reach the public demo or case study without
+  the owner's consent; only the fictional broker is shown publicly.
+- **Q3 What goes to Claude** (20261026): cleaned text only. Proofloop's own code strips names, email addresses and
+  phone numbers and drops the Impressum first; Claude gets that text plus the measurements. Screenshots never
+  leave the machine; a visual finding links its screenshot as local evidence. README and UI say plainly that page
+  text is processed by Anthropic outside the EU. An EU cloud endpoint is a possible later upgrade.
+- **Q4 Hosting in v1** (20261026): local, plus a read-only static demo of the fictional broker's prepared audit on
+  Cloudflare, with a visible capture date and a "prepared demo" label. No live collection, database or API key
+  online; visitors' own calculator numbers stay in their browser and are never stored. Live audits, n8n and Claude
+  stay local. Publishing needs Henri's explicit OK at the time. Supabase and the cloud worker stay documented for
+  later.
+- **Q5 First ticket** (20261026): the savings calculator (pure module with tests plus a plain screen to try it),
+  which also sets up the project skeleton and check command. Then the evidence collector with URL guard, then the
+  fictional broker's site.
+- **Q6 Money presentation** (20261026): break-even is the headline ("pays off from N enquiries a month": setup
+  spread over the payback period plus running costs, divided by the staff-time value one enquiry frees). Below it:
+  hours freed per month and their staff-time value, labelled "not cash saved"; costs on their own line. Every number
+  shows its source (demo / company-supplied / measured); a result carries the weakest label among its inputs.
+  Worked example (demo): 120 enquiries, 6 min saved − 1 min review = 5 min net, €45/h, €10/month running, €720
+  setup over 12 months → €3.75 per enquiry, €70/month cost → pays off from 19 enquiries a month; frees 10 h =
+  €450 of staff time a month.
+- **Q7 Uncertainty** (20261026): low / expected / high for the two guessed inputs, net minutes saved per enquiry
+  (after review and corrections) and enquiries per month; hourly cost, running cost and setup cost stay single
+  values. A switching-value line: "still pays off as long as it saves at least X minutes per enquiry". No invented
+  safety discount: the user's low value does that job. After the validation test, the measured value replaces the
+  range and is labelled "measured". Demo ranges: minutes 3 / 5 / 7, enquiries 80 / 120 / 160.
+  Worked example: at 120 enquiries and €70/month cost, the switching value is 70 ÷ (120 × €0.75 per minute) =
+  0.78 min (shown as "at least 0.8 minutes"). The grill question had said 1.6 minutes; that was a calculation slip,
+  corrected here. Break-even enquiries by scenario: 3 min → 32, 5 min → 19, 7 min → 14.
+- **Q8 Design track timing** (20261026): ticket 1 ships the calculator logic with tests plus a plain test page
+  (browser-default styling, marked temporary). The design track (D0 catch-up, D1 design grill, D2 Mobbin, D3
+  tokens and motion, D4 prototype) runs as its own block before the first designed screen; the plain page is
+  thrown away then.
+
+### Calculator conventions [A] (Claude's defaults for ticket 1, open to Henri's veto)
+
+- Payback period for spreading setup cost: an input, default 12 months, labelled "assumption".
+- Rounding always against the recommendation: benefits (hours freed, staff-time value) rounded down, thresholds
+  (break-even enquiries, switching-value minutes) rounded up; hours to one decimal, euros whole. Money computed
+  exactly (decimal.js), never in floats; rounding only for display.
+- Net minutes saved ≤ 0 → "never pays off at these inputs", no break-even number. Net minutes may be negative (the
+  new way is slower, as METR measured): the result then says how many hours a month it adds.
+- Validation: no negative values except net minutes saved; low ≤ expected ≤ high; enquiries and payback months are
+  whole numbers; hourly cost > 0; payback ≥ 1 month; currency EUR only.
+- Input labels, weakest first: demo → assumption (a Proofloop default) → company-supplied → measured. A result takes
+  the weakest label among its inputs. These are provenance labels for numbers; the fact / hypothesis / estimate /
+  measured labels for findings come with the findings ticket.
+
+## v1 scope
+
+**[R] Requirements:** everything in `BRIEF.md`, in particular its acceptance criteria and portfolio deliverables.
+The grill decisions Q1–Q8 above narrow how they are met. **[A] Out of scope for v1** (brief's deferred list plus
+grill decisions): native apps, enterprise integrations, unrestricted crawling, autonomous modifications, a universal
+score, audits of any URL (Q2), hosted live collection (Q4), an EU cloud endpoint for Claude (Q3), the Claude Agent
+SDK (T2).
+
+Where each of Henri's ideas lands:
+
+| Idea | Ticket(s) |
+|------|-----------|
+| 1 Visually appealing, function first | 05 design track, 06 and 08 designed screens, charts with tables |
+| 2 Downloadable reports | 12 |
+| 3 n8n | 09 |
+| 4 Only what will really work (simplest-fix ladder) | 07 |
+| 5 Savings front and centre | 01, 08 |
+| 6 "Don't buy this" verdict | 01 ("never pays off"), 07 (verdict) |
+| 7 Company-supplied inputs | 01 (labels), 08 (input form), 13 (in the visitor's browser only) |
+| 8 Journey filmstrip | 03 (screenshots), 12 |
+
+## Tickets
+
+One ticket = one slice, reviewed and committed on its own. Only ticket 01 is written out now; later tickets get
+their file and brief when they come up, and may be split or reordered. Target weeks are [A] rough planning from
+the week of 20261026 (week 1) to the deadline 20270115 (week 12), with the Christmas break as buffer.
+
+| # | Ticket | Model | Review | Target |
+|---|--------|-------|--------|--------|
+| 01 | Savings calculator + project skeleton and check command ([issue](issues/01-savings-calculator.md)) | Main session: money logic is an adversarial-review trigger | `--adversarial` | Week 1 |
+| 02 | Evidence model + URL guard (Node fetch from W1, IPv4/IPv6 tests, port allow-list) | Main session: security | `--adversarial` | Week 2 |
+| 03 | Collection worker: Playwright in Docker as `pwuser`, every request through the guard, screenshots, text, axe, Lighthouse median of 5, CrUX, personal-data stripping, retention, robots.txt | Main session: security | `--adversarial` | Weeks 2–3 |
+| 04 | Fictional broker demo site with planted problems, plus hostile test pages | `slice-builder`, sonnet | standard | Week 3 |
+| 05 | Design track D0–D4: directions, design grill, Mobbin, tokens and motion, prototype | Main session with Henri | — | Week 4 |
+| 06 | App shell, audit definition, evidence inspector (designed) | `slice-builder`, sonnet | standard + `apple-design` | Week 5 |
+| 07 | Findings: deterministic checks, one Claude call on cleaned text, ≤3 findings with evidence-link checks, simplest-fix ladder, "insufficient evidence" and "don't buy this" verdicts | Main session: untrusted input + AI | `--adversarial` | Week 6 |
+| 08 | Finding detail, designed calculator with company-supplied inputs, charts with tables | `slice-builder`, sonnet | standard + `apple-design` | Week 7 |
+| 09 | n8n intake and routing workflow for the broker, importable recipe (credentials stripped), plain steps for Make / Zapier / Power Automate | `slice-builder`, sonnet | standard | Week 8 |
+| 10 | Validation flow: registered hypothesis, one metric, guardrails, baseline, results with intervals; human test protocol and recorded runs | Main session | standard | Weeks 8–9 |
+| 11 | Eval set and benchmark (promptfoo): genuine issues, harmless pages, insufficient information, hostile instructions; two-layer attribution check; raw results | Main session: untrusted input | `--adversarial` | Weeks 9–10 |
+| 12 | One-page PDF report per finding (tagged `page.pdf`), journey filmstrip | `slice-builder`, sonnet | standard + `apple-design` | Week 10 |
+| 13 | Static read-only demo build, README, case study, interview script, CV bullet with placeholders, deployment instructions | Main session | standard | Weeks 11–12 |
+
 ## Reusable prior work
 
 Merged into the Research tables above (W1–W6 and the lane report `docs/research/0b-building-blocks.md`).
@@ -174,6 +285,29 @@ Merged into the Research tables above (W1–W6 and the lane report `docs/researc
   the grill. 0b recommends the direct Messages API with no tools (T1/T2): both tasks are single calls with a fixed
   schema, and an agent loop over page text gives untrusted content a shell.
 - **Monthly API spend cap (€).** Both options bill through the Anthropic API; the cap goes on a dedicated workspace
-  (T3). 0b estimates ~$6.40 a month at 100 audits on Sonnet 5.5. Set the amount in the grill.
+  (T3). 0b estimates ~$6.40 a month at 100 audits on Sonnet 5.5. Set the amount before the first API call.
+- **Design track D0–D4.** Before the first designed screen (Q8); starts with Henri's design directions.
+- **Raw-data retention period** for real-site audits (Q2). Decide in the collector ticket.
+- **Human tests:** N, and what result counts as "failure", fixed before testing (P5: below N=20 descriptive only).
+  Decide before the validation ticket.
+- **Where AI is tested in the demo**, and which plausible recommendation is expected not to pay off. Decide in the
+  findings ticket.
+- **OWASP edition to cite** (2025 with verified IDs, or 2026 v1.0). Decide when writing the README.
 
 ## Six Hats
+
+- **White (facts):** 13 tickets in ~12 weeks to 20270115; ticket 01 has 10 acceptance examples and 5 properties;
+  the toolchain is ready except Chromium 1248, Lighthouse and the Supabase CLI; the Claude API cannot process in
+  the EU.
+- **Red (Henri's gut feeling):** "feels right" (20261027).
+- **Black (risks):** the schedule is tight with the Christmas break and the Werkstudent job, and the four security
+  slices (02, 03, 07, 11) carry adversarial reviews that can add rounds. The human tests in ticket 10 need 6–10
+  real participants, so recruiting starts by week 4. A "doesn't pay off" result cannot be planned, only tested
+  honestly. If behind by week 8, cut in this order: the filmstrip (12), the Make/Zapier/Power Automate steps (09),
+  the static demo link (13); never the audit-to-validation journey the brief requires.
+- **Yellow (benefits):** the part Henri cares about most (savings) works and is tested in week 1. Break-even instead
+  of "savings" is an honest, defensible headline for fintech interviews. Every number carries its source label from
+  the first line of code.
+- **Green (strongest alternative not taken):** the evidence collector first (risk first), so the hardest technical
+  surprises show up in week 1. Not taken: the calculator sets the labelling rules everything else uses, and the
+  collector still starts in week 2.

@@ -6,8 +6,8 @@ calculator and a small validation flow. English UI.
 
 ## Status
 
-- 20261026: folder and git repo created; step 0 (diverge) done, all 8 ideas go forward; step 0b (research) done,
-  all verdicts picked; step 1 (grill) running. No code yet.
+- 20261027: spec approved (steps 0, 0b, 1, 3 done; `docs/spec.md`); ticket 01 (savings calculator + skeleton) in
+  build. No code before ticket 01.
 - Requirements: `BRIEF.md` (Henri's words, verbatim). Spec: `docs/spec.md`; tickets: `docs/issues/NN-<slug>.md`;
   reviews: `docs/review/`; research lane reports: `docs/research/`. These are tracked (not `.scratch/`) so the
   development process is visible on GitHub.
