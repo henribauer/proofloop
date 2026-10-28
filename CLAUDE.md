@@ -8,6 +8,8 @@ calculator and a small validation flow. English UI.
 
 - 20261027: spec approved (steps 0, 0b, 1, 3 done; `docs/spec.md`); ticket 01 (savings calculator + skeleton) in
   build. No code before ticket 01.
+- 20261028: pivot (BRIEF.md amendment): Proofloop becomes an automation advisor built on tested n8n blueprints.
+  Pivot grill P-Q1–P-Q10 and a 24-ticket plan to 20270115 approved; ticket 01 resumes in its pivot revision.
 - Requirements: `BRIEF.md` (Henri's words, verbatim). Spec: `docs/spec.md`; tickets: `docs/issues/NN-<slug>.md`;
   reviews: `docs/review/`; research lane reports: `docs/research/`. These are tracked (not `.scratch/`) so the
   development process is visible on GitHub.

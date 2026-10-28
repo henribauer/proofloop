@@ -198,3 +198,13 @@ Prepare deployment instructions, but do not publish, purchase services, or push 
 Deferred from version one: native apps, enterprise integrations, unrestricted crawling, autonomous modifications, and a universal optimization score.
 
 Main risk: a public website audit cannot establish internal business problems or real financial returns; preserve that distinction throughout the product and portfolio.
+
+---
+
+## Amendment 20261028 (Henri, verbatim)
+
+> i want that the project is more focused on optimizing companies with systems like n8n so i tell them what can be
+> automized and how and what tools are needed. ask me if ur unclear
+
+This amendment wins over the text above where they conflict. How it is applied is recorded in `docs/spec.md` under
+"Pivot".

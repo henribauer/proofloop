@@ -1,11 +1,123 @@
 # Proofloop — spec
 
-Status: spec approved by Henri 20261027 (steps 0, 0b, 1, 3 done); ticket 01 in build. Requirements: `BRIEF.md`
-(Henri, verbatim).
+Status: **pivot plan approved (Henri, 20261028: "feels right", OK for the plan and changes 1–3).** Spec approved
+20261027, then Henri amended the brief toward automation advice with n8n; ticket 01 resumes with its pivot
+revision. The pivot grill is settled; v1 scope, Tickets and Six Hats are rewritten for it; the Diverge, Research and Grill sections stay as the
+dated record. Requirements: `BRIEF.md` (Henri, verbatim, with the 20261028 amendment).
 Track: new project with UI → steps 0–10 + design track D0–D7.
 
 Legend used throughout: **[R]** Henri's requirement (from the brief) · **[A]** Claude's proposed assumption,
 open until Henri confirms · **[?]** open question.
+
+## Pivot (20261028)
+
+Amendment (BRIEF.md): Proofloop focuses on optimising companies with automation platforms like n8n: what can be
+automated, how, and which tools are needed. Restated: Proofloop becomes an automation advisor that shows which tasks
+can be automated, how (an importable n8n workflow), with which tools, and when it pays off; honest evidence labels
+and break-even stay. Fact research for the pivot runs as a workflow; results go to `docs/research/pivot-*.md`.
+
+### Pivot decisions
+
+- **P-Q1 Where Proofloop learns how a company works** (20261028): a structured company intake plus the website.
+  The company (in the demo: the fictional broker) supplies its process (steps, volume per month, time per step,
+  tools used); Proofloop adds what the public website shows (incl. tools it already embeds). Every fact is labelled
+  "observed on the website" or "supplied by the company".
+- **P-Q2 Which processes** (20261028): v1 covers one process in depth: an enquiry from arrival to booked appointment,
+  with all internal steps (capture, CRM contact and duplicate check, qualification, document request, slot
+  proposal, confirmation and reminders, advisor handover, follow-up). The fully developed product covers any process
+  a company names (Henri: "B later"), so the intake and data model are process-agnostic from the start (steps,
+  volume, time per step, tools, all per process) and the calculator counts "cases per month", shown as "enquiries"
+  for this process. No rebuild needed to add processes later.
+- **P-Q3 Where the n8n workflows come from** (20261028): v1 recommends only tested blueprints: about 5–8 building
+  blocks for the enquiry process, each built and run in the local n8n; Proofloop picks the blocks that fit the intake
+  and fills in the company's tools. Later, for "any process": AI-drafted workflows may fill gaps, always labelled
+  "untested draft, check before use" and never presented as a recommendation.
+  _Narrowed for v1 to one tested tool per block (v1 scope, change 3; Henri OK 20261028)._
+- **P-Q4 Which tools** (20261028): build on what the company already has (named in the intake or detected on the
+  website) and only fill gaps from a short vetted list. A listed tool needs an official n8n integration, a way to
+  keep data in the EU, and a published price; its monthly cost flows into the break-even. No affiliate links or paid
+  placements.
+- **P-Q5 Website audit in v1** (20261028): cut down to what serves automation: the enquiry entry point (form fields,
+  booking tool, stated response times), tool detection (embedded form, booking, chat, CRM tools), and accessibility
+  checks on the enquiry form only. No speed measurements (Lighthouse, CrUX) in v1. URL guard, personal-data stripping
+  and hostile-content protection stay in full.
+  Henri's direction for the full product (20261028, his words: "the audit should be for whole companies, first on a
+  small scale and then getting bigger, and also websites"): Proofloop grows into an audit of whole companies,
+  website included. What "small scale, then bigger" refers to is P-Q6.
+- **P-Q6 What grows** (20261028): both, in this order. First the audit grows within small businesses (one process →
+  more processes → the whole small company plus its website); then larger companies, which need other methods
+  (interviews, system data, stricter data protection) and come as a later phase. v1 is the first step: one process,
+  tested and measured, built to grow into a whole-company audit.
+- **P-Q7 Which tools count as connectable** (20261028; replaces P-Q4's "official n8n integration" condition): a
+  tiered rule, shown on every tool. Tier 1 built-in n8n node (preferred); tier 2 community node verified by n8n;
+  tier 3 n8n HTTP Request against a documented API, the request built into the tested blueprint; tier 4 no API:
+  "not automatable with n8n", stays manual or a tool switch is offered with its cost in the break-even. Unverified
+  community nodes are never recommended (third-party code inside the company's n8n). P-Q4's other conditions stay:
+  EU data option, published price, no affiliate links.
+- **P-Q8 What automation may decide** (20261028): automation sorts and prepares, a person decides. Blueprints check
+  completeness, flag missing documents, mark "probably outside our offer" and route to the right advisor queue;
+  every decision that affects the customer (reject, turn away, put on hold) is made by a person before any email
+  goes out (GDPR Art. 22; CJEU SCHUFA). Proofloop flags this risk when an intake describes automatic rejection. The
+  person's review time counts in the break-even as minutes not saved.
+- **P-Q9 AI steps in the company's blueprints** (20261028): rules first, wherever form fields allow; free text that
+  rules cannot sort goes to a person. An AI sorting block exists only as an optional building block that runs after a
+  step removing names, contact details and health information. The brief's AI-versus-rules test runs on the
+  fictional broker's enquiries with Claude (no real data). An EU-hosted model is a later research topic.
+- **P-Q10 Who fills in the intake** (20261028): v1 is an advisor's tool. Henri fills in the intake in a
+  conversation with the company; the company supplies the "last 10 cases" table itself. Everything stays on his
+  machine, with no login or online storage for outsiders. A self-service link for companies is the step after v1.
+
+### Pivot conventions [A] (Claude's defaults, open to Henri's veto)
+
+- **"Tested blueprint"** = runs end to end in a pinned n8n version (recorded per blueprint) against local mock
+  services (no sign-ins to real vendor accounts; each blueprint records what its mocks stand in for), with a
+  recorded test run (input, output, execution log); every node that writes to a customer is unreachable without the
+  human-approval step, except confirmation and reminder mail for an appointment the enquirer booked themselves (the
+  blueprint's test enforces this list); every Webhook or resume trigger has authentication other than None; exported JSON passes a check that fails on credential names and IDs and on secret-like values
+  in node parameters (auth headers, tokens in URLs, webhook secrets); re-tested when the n8n version changes.
+  (Narrowed 20261028 by the plan's critic pass: the first version allowed test accounts.)
+- **Intake** = per-criterion ratings after PCEF (each answer a number, a choice or "don't know", each with its
+  provenance label), gate order eligibility → potential → relevance, a SIPOC of 4–5 steps, and the "last 10 cases"
+  table instead of "minutes per enquiry". Provenance (P-Q1): "supplied by the company" is the calculator's
+  `company-supplied`; "observed on the website" tags ticket 11's signals; both show next to the finding labels
+  (fact / hypothesis / estimate / measured).
+- **Tier per action** (P-Q7): a built-in node counts as tier 1 only for the actions it offers; a trigger-only node
+  (Calendly, Cal.com, Typeform, Jotform) is tier 1 for its trigger and tier 3 (HTTP Request) for its actions.
+- **Calculator** counts cases per month; running cost = the recommended tools' monthly prices + n8n hosting; setup
+  cost = setup hours × rate + one-off fees. Ticket 01's paused work is kept and adapted, not redone.
+- **Measured labels:** below N=20, results read "measured, descriptive (N=…)", never as statistics.
+
+### Pivot research (20261028)
+
+Workflow: four `researcher` lanes (claude-sonnet-5-5), each re-checked by an independent skeptic, plus a
+completeness critic. Reports: `docs/research/pivot-assessment.md`, `pivot-n8n.md`, `pivot-prior-art.md`,
+`pivot-website-signals.md`, `pivot-critic.md`. Of 40 key claims, 29 confirmed, 10 partly (details corrected),
+1 unverifiable, 0 refuted. Findings that reopen or add decisions:
+
+1. **The P-Q4 tool gate is too strict.** n8n has no built-in node for Lexware Office, sevDesk, DATEV, DocuSign,
+   Tally or Google Forms (community nodes exist for some; the HTTP Request node can call documented APIs).
+   Calendly, Cal.com, Typeform and Jotform are trigger-only. "Official integration" would empty the German
+   finance-tool list → redefine the gate as levels (P-Q7).
+2. **Automated qualification can be an automated decision under GDPR Art. 22**; the CJEU SCHUFA ruling (C-634/21)
+   treats a score a decision "draws strongly" on as such (judgment text not reached; secondary sources agree). A
+   blueprint that rejects enquiries on income rules is a legal risk → rule needed (P-Q8).
+3. **No EU route for Claude** (re-confirmed), and insurance enquiries can contain health data (Art. 9). Blueprints
+   with an AI step that companies run on real customer data need an EU-capable model or no personal data → open.
+4. **n8n licence grey zone:** pushing workflows into a client's n8n, or building them for outsiders with an AI agent,
+   is not clearly covered; nobody has asked license@n8n.io → Henri may want to ask before "any process" with AI drafts.
+5. **"Tested" needs a definition:** a pinned n8n version (local 2.43.8; newer stable releases exist, a 3.0
+   pre-release changes imports) and test accounts or mocks for Gmail, CRM, Lexware.
+6. **Measurement:** n8n Insights shows executions, failures and run time, but its "time saved" is self-entered, not
+   measured. With 6–10 testers, results are "measured, descriptive (N=…)", not statistics.
+7. **Assessment method to borrow:** rate each suitability criterion separately (no composite score), gate order
+   eligibility → potential → relevance (PCEF, CC BY 4.0); ask for "the last 10 cases" instead of "minutes per
+   enquiry" to cut self-report bias.
+8. **Prior art:** process and task mining (Celonis, UiPath, Power Automate) need system logs or desktop recordings;
+   Zapier/Make/n8n AI builders generate workflows from a prompt without assessing the business. Free German
+   Mittelstand-Digital checks exist. Proofloop's honest gap: evidence-labelled assessment + tested blueprint +
+   break-even + measured result, not a new category.
+9. **Demo domain rules not yet researched:** broker regulation (§34d GewO, IDD) and UWG §7 consent for follow-up
+   emails.
 
 ## Diverge
 
@@ -228,48 +340,133 @@ point to). It is caught up at the start of the design grill (D1), before any Mob
   the weakest label among its inputs. These are provenance labels for numbers; the fact / hypothesis / estimate /
   measured labels for findings come with the findings ticket.
 
-## v1 scope
+## v1 scope (revised for the pivot, 20261028)
 
-**[R] Requirements:** everything in `BRIEF.md`, in particular its acceptance criteria and portfolio deliverables.
-The grill decisions Q1–Q8 above narrow how they are met. **[A] Out of scope for v1** (brief's deferred list plus
-grill decisions): native apps, enterprise integrations, unrestricted crawling, autonomous modifications, a universal
-score, audits of any URL (Q2), hosted live collection (Q4), an EU cloud endpoint for Claude (Q3), the Claude Agent
-SDK (T2).
+**[R] Requirements:** `BRIEF.md` with its 20261028 amendment. Proofloop tells a small business what in one process
+can be automated with n8n, how, with which tools, and when it pays off; the brief's acceptance criteria and
+portfolio deliverables still apply. The pivot decisions P-Q1–P-Q10 and the earlier decisions that still hold (Q1
+broker, Q2 allow-list, Q3 cleaned text only, Q4 local plus static demo, Q6/Q7 break-even and switching value, Q8
+design track timing) narrow how.
 
-Where each of Henri's ideas lands:
+**Changes to earlier decisions** (proposed by Claude, approved by Henri 20261028 together with the plan):
+
+1. **Findings are rule-based.** Claude appears only in the AI-versus-rules test on fictional enquiries (ticket 12).
+   Q3 had Claude turn observations into findings; with the pivot the findings come from intake answers and website
+   signals that rules handle, and keeping Claude off the critical path removes an untrusted-input and cost surface.
+   Q3's cleaned-text rule and the outside-EU disclosure still apply. Rejecting this restores Q3: Claude drafts the
+   findings, ticket 15 becomes adversarial, and the spend cap is needed before 15.
+2. **The journey filmstrip (idea 8) leaves v1**; the website audit no longer collects a page-by-page journey. The
+   Make / Zapier / Power Automate plain steps stay, but are second in the cut order. Rejecting this adds a
+   filmstrip ticket after 11 and puts it first in the cut order.
+3. **One tested tool per block.** P-Q3 says Proofloop "fills in the company's tools". To keep "only tested
+   blueprints", each v1 block ships with one tool, tested against its mock; a company on another tool sees that
+   tool's tier and "no tested blueprint for <tool> yet", never an untested swap. Rejecting this adds tool variants,
+   each with its own mock and recorded run, to tickets 10 and 13 (both grow to L, so the schedule moves).
+
+**Not in v1** (stated so no one assumes slack): speed measurements (Lighthouse, CrUX); hosted live collection and
+Supabase (deployment instructions only); more than one process (a second fixture proves the data model is
+process-agnostic); AI-drafted blueprints; an EU-hosted model; the self-service intake link; larger companies; the
+journey filmstrip; tests against live vendor APIs (blueprints are tested against local mocks); the optional AI
+sorting block and its personal-data removal step (P-Q9; v1 uses Claude only on fictional enquiries in ticket 12);
+more than one tested tool per block, and per-company edits of a blueprint (change 3); and the brief's deferred
+list (native apps, enterprise integrations, unrestricted crawling, autonomous modifications, a universal
+score).
+
+Where Henri's ideas land:
 
 | Idea | Ticket(s) |
 |------|-----------|
-| 1 Visually appealing, function first | 05 design track, 06 and 08 designed screens, charts with tables |
-| 2 Downloadable reports | 12 |
-| 3 n8n | 09 |
-| 4 Only what will really work (simplest-fix ladder) | 07 |
-| 5 Savings front and centre | 01, 08 |
-| 6 "Don't buy this" verdict | 01 ("never pays off"), 07 (verdict) |
-| 7 Company-supplied inputs | 01 (labels), 08 (input form), 13 (in the visitor's browser only) |
-| 8 Journey filmstrip | 03 (screenshots), 12 |
+| 1 Visually appealing, function first | 08 design track, 16 and 18 designed screens, charts with tables |
+| 2 Downloadable reports | 18 (print-ready recommendation page and PDF export) |
+| 3 n8n | 02 harness and capture block, 10 / 13 / 20 blueprints, 14 recommender |
+| 4 Only what will really work | 02 "tested" definition, 04 gate order, 10 and 13 approval gate, 15 "insufficient evidence" and "don't automate" verdicts |
+| 5 Savings front and centre | 01 calculator, 14 tool and setup costs in the break-even, 18 calculator screen |
+| 6 "Don't buy this" verdict | 01 "never pays off", 12 AI-versus-rules result, 15 verdicts |
+| 7 Company-supplied inputs | 04 intake (filled in with the company, kept on Henri's machine), 22 static demo (visitors' numbers stay in their browser) |
+| 8 Journey filmstrip | not in v1 (change 2 above) |
 
-## Tickets
+## Tickets (revised for the pivot, 20261028)
 
-One ticket = one slice, reviewed and committed on its own. Only ticket 01 is written out now; later tickets get
-their file and brief when they come up, and may be split or reordered. Target weeks are [A] rough planning from
-the week of 20261026 (week 1) to the deadline 20270115 (week 12), with the Christmas break as buffer.
+Planning method: three independent plan drafts (risk first, demo first, smallest complete), each scored by three
+judges (coverage, schedule realism, workflow compliance); this plan merges the demo-first structure (schedule and
+workflow winner) with risk-first's early n8n harness, fixtures and protocol tickets (coverage winner) and fixes every
+must-fix the judges raised. A four-lens critic pass (consistency, schedule and workflow, ticket 01 numbers,
+boundaries), each lens checked by a skeptic, then confirmed 24 findings on the first version; all are worked in.
 
-| # | Ticket | Model | Review | Target |
-|---|--------|-------|--------|--------|
-| 01 | Savings calculator + project skeleton and check command ([issue](issues/01-savings-calculator.md)) | Main session: money logic is an adversarial-review trigger | `--adversarial` | Week 1 |
-| 02 | Evidence model + URL guard (Node fetch from W1, IPv4/IPv6 tests, port allow-list) | Main session: security | `--adversarial` | Week 2 |
-| 03 | Collection worker: Playwright in Docker as `pwuser`, every request through the guard, screenshots, text, axe, Lighthouse median of 5, CrUX, personal-data stripping, retention, robots.txt | Main session: security | `--adversarial` | Weeks 2–3 |
-| 04 | Fictional broker demo site with planted problems, plus hostile test pages | `slice-builder`, sonnet | standard | Week 3 |
-| 05 | Design track D0–D4: directions, design grill, Mobbin, tokens and motion, prototype | Main session with Henri | — | Week 4 |
-| 06 | App shell, audit definition, evidence inspector (designed) | `slice-builder`, sonnet | standard + `apple-design` | Week 5 |
-| 07 | Findings: deterministic checks, one Claude call on cleaned text, ≤3 findings with evidence-link checks, simplest-fix ladder, "insufficient evidence" and "don't buy this" verdicts | Main session: untrusted input + AI | `--adversarial` | Week 6 |
-| 08 | Finding detail, designed calculator with company-supplied inputs, charts with tables | `slice-builder`, sonnet | standard + `apple-design` | Week 7 |
-| 09 | n8n intake and routing workflow for the broker, importable recipe (credentials stripped), plain steps for Make / Zapier / Power Automate | `slice-builder`, sonnet | standard | Week 8 |
-| 10 | Validation flow: registered hypothesis, one metric, guardrails, baseline, results with intervals; human test protocol and recorded runs | Main session | standard | Weeks 8–9 |
-| 11 | Eval set and benchmark (promptfoo): genuine issues, harmless pages, insufficient information, hostile instructions; two-layer attribution check; raw results | Main session: untrusted input | `--adversarial` | Weeks 9–10 |
-| 12 | One-page PDF report per finding (tagged `page.pdf`), journey filmstrip | `slice-builder`, sonnet | standard + `apple-design` | Week 10 |
-| 13 | Static read-only demo build, README, case study, interview script, CV bullet with placeholders, deployment instructions | Main session | standard | Weeks 11–12 |
+One ticket = one slice under ~200 KB of diff, reviewed and committed on its own. Only ticket 01 is written out; each
+later ticket gets its file and Brief when it comes up, and may be split along the pre-agreed lines below. The check
+gate runs `npm test` (tsc + Vitest) only; Docker, n8n and Playwright suites run as `npm run test:integration` by the
+main session, with the result quoted in each handoff. Model column: a main-session ticket names its session model,
+**Opus** (claude-opus-5-5) for hard slices (adversarial review or size L) and grill-like work (07, 08), **Sonnet**
+(claude-sonnet-5-5, the workspace default) otherwise; each ticket starts a fresh session on its model.
+slice-builder = claude-sonnet-5-5, effort medium; researcher = claude-sonnet-5-5. Weeks: W1 = week of Monday 20261026; W8 ends
+Friday 20261218 (feature freeze); W9–W10 (20261221–20270103) are buffer with no work planned; W11–W12 run to Friday
+20270115. Size: S / M / L, where L is a hard slice that takes most of a week; **at most one L ticket per week**.
+Auto-continue on `auto/v1` stops at tickets touching money, secrets or auth, or data deletion (01, 02, 04, 09, 12,
+14): those end in a handoff. Design track: D0–D4 in 08; D5 (tokens only, motion on transform and opacity only) goes
+into the Briefs of 16, 18 and 19; D6 is their apple-design review plus the motion check (a recording, the
+reduced-motion state, measured contrast); D7: the chosen direction goes into a design note at 08's sign-off,
+updated at 18.
+
+| # | Ticket | Size | Model | Review | Target |
+|---|--------|------|-------|--------|--------|
+| 01 | Calculator adapted to cases per month (process noun for display), project skeleton, check command, temporary plain page ([issue](issues/01-savings-calculator.md)) | M | Opus | adversarial (money) | W1–W2 |
+| 02 | n8n test harness and the first blueprint: pinned n8n in Docker, local mocks and a mail sink, recorded runs; the **capture** block (authenticated webhook → normalised enquiry → mock CRM); the blueprint metadata format (fit conditions, tools and tier, running cost, setup hours and one-off fees, review minutes, n8n version, what each mock stands in for, optional plain steps for Make / Zapier / Power Automate; tier and prices provisional until 14); an export check that fails on credential names and IDs, on secret-like values in node parameters (seeded fake credential, fake secret in an HTTP Request header) and on any Webhook or resume trigger without authentication (seeded unauthenticated node); the human-approval gate as a reusable step. Writes the "tested" definition; if it cannot be met, P-Q3 reopens before any further blueprint | L | Opus | adversarial (secrets, auth) | W2 |
+| 03 | Fixtures: the broker's 3-page site with planted friction and a booking embed, a form that records any submission, a login-walled page, hostile and harmless pages, vendor embed snippets from official docs, 40 fictional enquiries with gold routes (a few with hostile text); all labelled demo / fictional | M | slice-builder | standard | W2–W3, parallel to 02 |
+| 04 | Intake model: process-agnostic (SIPOC, steps, volume, last-10-cases, tools with a "has API" answer), PCEF ratings with provenance and "don't know", gate order, Art. 22 flag; a data screen that blocks names, contact details and health information in the last-10-cases table; real intakes only in a gitignored local folder, with a test that only fixtures are tracked; the broker's intake and last-10-cases fixture (demo) and a second-process fixture; adapter into the calculator's low / expected / high | L | Opus | adversarial (money: the adapter) | W3 |
+| 05 | URL guard, evidence record, private allow-list (max 5 pages per audit), tested against 03's hostile URLs | M | Opus | adversarial (external input) | W3 |
+| 06 | Walking skeleton (Demo v0): the plain page runs the whole loop on fixtures: intake → rule-based pick → 02's capture blueprint → break-even | M | Sonnet | standard | W4 (Demo v0 by 20261120) |
+| 07 | Human-test protocol, measurement harness and recruitment: frozen hypothesis, primary metric, failure criterion, N, matched case sets, consent (covering publication of raw timings), raw-data schema with pseudonymous tester IDs (the name key stays in a gitignored local folder; a test checks that only pseudonymous data is tracked), 2-person pilot | S | Opus with Henri | standard | W3–W5 |
+| 08 | Design track D0–D4: directions, design grill, Mobbin references, tokens and motion, prototype; design note (D7) at sign-off | M | Opus with Henri | apple-design on the prototype | W4–W5, sign-off by 20261130 |
+| 09 | Collection worker: Playwright in Docker as `pwuser` with seccomp; read-only (navigation only: no form submission, no typing, no sign-in; tested with 03's recording form and login-walled page); every request through 05; text and local-only screenshots; personal-data stripping; automatic retention purge; robots.txt | L | Opus | adversarial (external input, data deletion) | W4 |
+| 10 | Blueprint blocks A: **qualification and routing** (completeness check, missing-document flag, "probably outside our offer" mark, route to an advisor queue; a person decides before any customer email), document request, CRM contact with duplicate check; plus the mocks these blocks need | M | Opus | adversarial (Art. 22, external input) | W5 |
+| 11 | Website signals: enquiry entry point, tool detection from our own fingerprint list (vendor docs, no GPL database), accessibility of the enquiry form (axe, read-only through 09), and a keep-or-cut value check; every signal tagged "observed on the website" | M | Opus | adversarial (external input) | W6 |
+| 12 | AI-versus-rules test: 10's rules vs Claude on 03's 40 fictional enquiries, cleaned text only; Messages API with no tools and no network access, schema-validated JSON checked in code, key from the environment only; raw outputs recorded. Needs Henri's dedicated workspace and spend cap first | M | Opus | adversarial (API key, untrusted input) | W7 |
+| 13 | Blueprint blocks B: slot proposal (behind the approval gate), confirmation and reminders (exempt from the gate: an appointment the enquirer booked), advisor handover; enquiry text cannot inject into mail templates; plus the mocks these blocks need (e.g. a calendar) | M | Opus | adversarial (external input, customer mail) | W5 |
+| 14 | Tool catalogue and recommender: vetted tools with tier, EU option and price (a researcher lane verifies and cites them in W5); tier rated per action (a trigger-only node is tier 3 for its actions); fills the blueprints' provisional tier and price fields; each block has one tested tool (change 3): a company on another tool sees that tool's tier and "no tested blueprint for <tool> yet", and the download is always the tested file; running cost (tool prices + n8n hosting) and setup cost (setup hours × rate + one-off fees) into the calculator | L | Opus | adversarial (money) | W6 |
+| 15 | Findings: at most 3 rule-based recommendations, each linked to evidence and labelled fact / hypothesis / estimate / measured, with the provenance tag next to each fact; evidence-reference validator; "insufficient evidence" and "don't automate" verdicts; Art. 22 note; outside-EU disclosure in UI and README (Claude runs outside the EU; v1 uses it only on fictional data; an AI step a company adds must not receive personal or health data) | L | Opus | standard | W7 |
+| 16 | Designed UI-A: app shell, define audit and intake form, audit overview with what the evidence allows, evidence inspector | M | slice-builder | standard + apple-design | W7 |
+| 17 | Human test sessions: manual handling vs the n8n workflow on matched fictional enquiries, raw data, descriptive results | M | Sonnet with Henri | standard | W7–W8 |
+| 18 | Designed UI-B: recommendation detail (tools with tier, EU option and price; "tested against local mocks of <vendor>, not the live API, on n8n <version>") with blueprint download, calculator with charts and tables, print-ready page and PDF export | M | slice-builder | standard + apple-design | W8 |
+| 19 | Validation flow and results view: hypothesis register, one metric with guardrails, results with limitations, reading 07's raw-data schema; a measured result below N=20 shows N and "descriptive" (tested) | M | Sonnet | standard + apple-design | W8 |
+| 20 | Follow-up block: a researcher lane on UWG §7, §34d GewO and IDD first, then the consent-gated follow-up blueprint behind the approval gate, with its tier and price fields from 14's catalogue (first cut) | S | researcher → Opus | adversarial (customer mail, consent) | W8 |
+| — | **Feature freeze 20261218; W9–W10 buffer** | | | | |
+| 21 | Eval set and benchmark: genuine issues, harmless pages, insufficient information, hostile instructions; two-layer evidence check; raw results and limitations | L | Opus | adversarial | W11 |
+| 22 | Static prepared-demo build (with capture date), README, deployment instructions incl. the hosted phase, a "roadmap, not built" section | M | Sonnet | standard | W11 |
+| 23 | Case study, interview script, CV bullet with placeholders for anything not measured; states what "tested" covers (local mocks, pinned n8n) and that Claude ran only on fictional data, outside the EU | M | Sonnet | standard | W12 |
+| 24 | Release hardening: fresh-clone run, `npm audit` and licences, every blueprint re-tested on the pinned n8n, a table of every review file and each finding's disposition (all tickets, security areas first: 02 webhook and export check, 05 guard, 09 worker, 10 and 13 customer mail, 12 API wrapper), acceptance checklist; its own diff gets the adversarial review | M | Opus | adversarial (own diff) | W12 |
+
+`tools/review.sh` reviews the uncommitted diff, so every security area is reviewed in the ticket that builds it;
+ticket 24 does not re-review committed code, it checks that those reviews exist and every finding has a disposition.
+
+**Pre-agreed split lines** (if a ticket nears 200 KB): 02 harness vs the capture block (06 then waits for the
+block); 04 model and PCEF vs data screen, tracked-files test and adapter; 09 worker vs stripping and purge (the
+worker never ships without them); 13 by block; 14 catalogue vs recommender and costing; 15 rules vs the validator;
+16 and 18 by screen group; 19 logic vs results view; 21 eval set vs benchmark runner.
+
+**Henri's dated actions:** name 6–10 testers and check their availability by 20261113; two design sessions in
+W4–W5 (D4 sign-off by 20261130); approve the real-site allow-list before ticket 11 (by 20261127); create the
+dedicated Anthropic workspace with a spend cap before ticket 12 (by 20261204).
+
+**Cut triggers:** 09 not done or the allow-list not approved by 20261127 → real-site audits shrink to the broker
+site plus vendor fixtures. D4 not signed off by 20261130 → designed screens only for the evidence inspector and
+calculator, the rest stays plain. 13 not done by 20261204 → 20 is cut and documented as roadmap. No workspace and
+spend cap by 20261204 → 12 moves to W11 next to 21 (it stays in v1). Fewer than 6 testers by 20261204 → no human-performance
+claim, CV placeholders stay. Fewer than 4 sessions recorded by 20261218 → 17 finishes in 20270104–08 next to 21 and
+22, 22's static demo link is cut (the local snapshot stays), 19's results view ships with the pilot data and its
+limitation text, and 23 waits for the sessions.
+
+**Cut order** if behind at the freeze: 20 follow-up block → Make / Zapier / Power Automate plain steps → static demo
+link (the local snapshot stays) → charts beyond one waterfall with its table → PDF polish (print stylesheet only) →
+testers down to 6 → website audit down to tool detection if 11's value check shows no effect. **Never cut:** tested
+blueprints with recorded runs, the human-approval gate, the export secret check and webhook auth, the URL guard,
+the read-only worker with personal-data stripping and retention purge, evidence links and validator, demo labels,
+the outside-EU disclosure, hostile tests, recorded human sessions, the break-even calculator, the AI-versus-rules
+test.
+
+### Pre-pivot ticket plan (20261026, replaced)
+
+The earlier 13-ticket plan for the website-centred product is in git history (`bcee6bb`, `docs/spec.md`).
 
 ## Reusable prior work
 
@@ -281,33 +478,50 @@ Merged into the Research tables above (W1–W6 and the lane report `docs/researc
 
 ## Deferred decisions
 
-- **Direct Claude API calls vs an own agent on the Claude Agent SDK.** Henri, 20261026: either works. Decide in
-  the grill. 0b recommends the direct Messages API with no tools (T1/T2): both tasks are single calls with a fixed
+Added by the pivot (20261028):
+
+- **n8n licence for the "any process" phase:** whether pushing workflows into a client's n8n, or drafting them with
+  AI for outsiders, needs a commercial licence. Henri asks license@n8n.io before that phase; handing out JSON files
+  that a company imports itself (v1) is covered as consulting.
+- **Rules of the demo domain:** broker regulation (§34d GewO, IDD) and UWG §7 consent for follow-up emails. Research
+  in ticket 20, before the follow-up block is built.
+- **EU-hosted AI model** for AI blocks on real data (P-Q9). After v1.
+- **Self-service intake link** with online storage (P-Q10). After v1.
+- **Larger companies** (P-Q6): other methods, after the small-business audit covers a whole company.
+
+From the first grill:
+
+- **Direct Claude API calls vs an own agent on the Claude Agent SDK.** Henri, 20261026: either works. The pivot
+  plan (20261028) takes the direct Messages API with no tools, used only in ticket 12. 0b recommends the direct Messages API with no tools (T1/T2): both tasks are single calls with a fixed
   schema, and an agent loop over page text gives untrusted content a shell.
 - **Monthly API spend cap (€).** Both options bill through the Anthropic API; the cap goes on a dedicated workspace
-  (T3). 0b estimates ~$6.40 a month at 100 audits on Sonnet 5.5. Set the amount before the first API call.
-- **Design track D0–D4.** Before the first designed screen (Q8); starts with Henri's design directions.
-- **Raw-data retention period** for real-site audits (Q2). Decide in the collector ticket.
+  (T3). 0b estimates ~$6.40 a month at 100 audits on Sonnet 5.5. With rule-based findings the only v1 use is ticket 12. Set the amount before ticket 12 (by 20261204).
+- **Design track D0–D4.** Ticket 08, before the first designed screen (Q8); starts with Henri's design directions.
+- **Raw-data retention period** for real-site audits (Q2). Decide in ticket 09.
 - **Human tests:** N, and what result counts as "failure", fixed before testing (P5: below N=20 descriptive only).
-  Decide before the validation ticket.
-- **Where AI is tested in the demo**, and which plausible recommendation is expected not to pay off. Decide in the
-  findings ticket.
-- **OWASP edition to cite** (2025 with verified IDs, or 2026 v1.0). Decide when writing the README.
+  Decide in ticket 07.
+- **Where AI is tested in the demo**, and which plausible recommendation is expected not to pay off. AI: ticket 12
+  (AI-versus-rules). The recommendation that should not pay off: decide in ticket 15.
+- **OWASP edition to cite** (2025 with verified IDs, or 2026 v1.0). Decide in ticket 22 (README).
 
-## Six Hats
+## Six Hats (revised for the pivot, 20261028)
 
-- **White (facts):** 13 tickets in ~12 weeks to 20270115; ticket 01 has 10 acceptance examples and 5 properties;
-  the toolchain is ready except Chromium 1248, Lighthouse and the Supabase CLI; the Claude API cannot process in
-  the EU.
-- **Red (Henri's gut feeling):** "feels right" (20261027).
-- **Black (risks):** the schedule is tight with the Christmas break and the Werkstudent job, and the four security
-  slices (02, 03, 07, 11) carry adversarial reviews that can add rounds. The human tests in ticket 10 need 6–10
-  real participants, so recruiting starts by week 4. A "doesn't pay off" result cannot be planned, only tested
-  honestly. If behind by week 8, cut in this order: the filmstrip (12), the Make/Zapier/Power Automate steps (09),
-  the static demo link (13); never the audit-to-validation journey the brief requires.
-- **Yellow (benefits):** the part Henri cares about most (savings) works and is tested in week 1. Break-even instead
-  of "savings" is an honest, defensible headline for fintech interviews. Every number carries its source label from
-  the first line of code.
-- **Green (strongest alternative not taken):** the evidence collector first (risk first), so the hardest technical
-  surprises show up in week 1. Not taken: the calculator sets the labelling rules everything else uses, and the
-  collector still starts in week 2.
+- **White (facts):** 24 tickets in 10 working weeks (W1–W8, W11–W12); 21 in the main session (16 on Opus, 5 on
+  Sonnet; 3 of them with Henri, 1 after a researcher lane), 3 slice-builder; 6 large; 13 with an adversarial
+  review. The pivot research checked 40 key claims (0 refuted). The paused calculator has 38 green tests. The
+  Claude API cannot process in the EU; n8n has no built-in node for Lexware Office, sevDesk or DATEV.
+- **Red (Henri's gut feeling):** "feels right" (20261028). (Pre-pivot plan: "feels right", 20261027.)
+- **Black (risks):** capacity: 24 tickets for a student with a part-time job; W4 (09 large, 06, design sessions),
+  W5 (10 and 13, the pilot, design sessions) and W7 (15 large, 12, the human sessions, 16 in parallel) are the
+  heaviest weeks. Ticket 02 is the biggest unknown: if "tested" cannot be met headlessly, P-Q3 reopens. "Tested"
+  means tested against local mocks, so a vendor API change can still break a blueprint. The human tests depend on
+  recruiting by 20261113. Rule-based findings make the AI part smaller than an "AI product" pitch might expect.
+  The follow-up block's legal rules stay unresearched until 20. The plan answers with dated cut triggers and a
+  fixed cut order instead of hope.
+- **Yellow (benefits):** a crude but complete demo of the whole loop by 20261120; the brief's intake-and-routing
+  example is a tested block by W5; every recommended workflow has a recorded test run; tool and setup costs flow
+  into an honest break-even; the AI-versus-rules test gives a real "is AI worth it here?" answer; the data model is
+  ready for "any process" and whole-company audits later.
+- **Green (strongest alternative not taken):** the smallest-complete plan (14 larger tickets): fewer handoffs, but
+  slices too large for the 200 KB review limit and no visible demo before W7. Not taken because the judges scored it
+  lowest on workflow compliance and found it hid the riskiest work (n8n harness) until week 4.
