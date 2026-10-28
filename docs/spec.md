@@ -5,6 +5,7 @@ Status: **pivot plan approved (Henri, 20261028: "feels right", OK for the plan a
 revision. The pivot grill is settled; v1 scope, Tickets and Six Hats are rewritten for it; the Diverge, Research and Grill sections stay as the
 dated record. Requirements: `BRIEF.md` (Henri, verbatim, with the 20261028 amendment).
 Track: new project with UI → steps 0–10 + design track D0–D7.
+Ticket 01 (20261028): built on `auto/v1` (calculator, tests, skeleton, plain page), in review and handoff to Henri.
 
 Legend used throughout: **[R]** Henri's requirement (from the brief) · **[A]** Claude's proposed assumption,
 open until Henri confirms · **[?]** open question.

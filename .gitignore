@@ -12,3 +12,7 @@ dist
 .env
 .env.*
 !.env.example
+
+# Stryker output
+.stryker-tmp
+reports

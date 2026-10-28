@@ -19,6 +19,17 @@ calculator and a small validation flow. English UI.
   `main` and changing the repo's visibility stay Henri's call.
 - Track: new project with UI → steps 0–10 plus the full design track D0–D7 (`~/claude/docs/agents/design-workflow.md`).
 
+## Commands
+
+- `npm test`: typecheck (`tsc --noEmit`), then Vitest (calculator acceptance examples and fast-check properties).
+  This is the check gate's command.
+- `npm run dev`: the temporary calculator page on http://localhost:5173.
+- `npm run build`: typecheck, then a production build into `dist/`.
+- `npm run mutate`: Stryker over `src/calculator.ts`; HTML report in `reports/mutation/`.
+- `node_modules` is a symlink into `~/claude-local/proofloop/node_modules`. npm replaces it with a real folder on
+  every install: re-run `~/claude/link-local-deps.sh` afterwards (main checkout), or move the folder back by hand in
+  an app worktree.
+
 ## Hard boundaries (from the brief)
 
 - Nothing related to WMP: no WMP sites, data, clients or branding.

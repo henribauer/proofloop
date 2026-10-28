@@ -103,12 +103,12 @@ ranges (04), findings (15), persistence, any network or AI.
 
 ## Done when
 
-- [ ] `npm test` green, and the check gate runs it for proofloop.
-- [ ] E1–E11 and the six properties are tests.
-- [ ] `npm run mutate` score reported in the handoff; every surviving mutant fixed or justified.
-- [ ] The plain page shows E1–E3 correctly with demo inputs; Henri has looked at it in the browser.
-- [ ] `node_modules` is a symlink into `~/claude-local/proofloop`.
-- [ ] Adversarial Codex review run; every finding fixed, rejected with a reason, or put to Henri.
+- [x] `npm test` green, and the check gate runs it for proofloop.
+- [x] E1–E11 and the six properties are tests.
+- [x] `npm run mutate` score reported in the handoff; every surviving mutant fixed or justified.
+- [x] The plain page shows E1–E3 correctly with demo inputs (checked 20261028); Henri has looked at it in the browser (20261028).
+- [x] `node_modules` is a symlink into `~/claude-local/proofloop`.
+- [x] Adversarial Codex review run; every finding fixed, rejected with a reason, or put to Henri.
 
 ## Build notes
 
@@ -120,3 +120,32 @@ ranges (04), findings (15), persistence, any network or AI.
   and Decimal-only money (W4).
 
 ## Comments
+
+20261028 — review (codex, adversarial): 1 findings → review/01-20261028-1147.md
+
+20261028 — handoff (Claude Code, claude-opus-5-5, main session):
+- Done: skeleton (Vite 8.3.5, React 19.3.1, TypeScript 7.0.2, Vitest 5.0.5, fast-check 4.10.2, Stryker 10.1.1,
+  decimal.js 10.6.0, exact pins); `src/calculator.ts` with the pivot revision (cases, `describe(s, noun)`);
+  `src/calculator.test.ts`: E1–E11, the six properties against a BigInt-fraction oracle, 49 tests green;
+  plain page `index.html` + `src/main.tsx` (noun "enquiries"), E1–E3 checked in the browser; CLAUDE.md commands;
+  spec status line; `.claude/launch.json` (`proofloop-dev`).
+- Mutation: 98.77 % (161 killed, 1 runtime error counted as killed, 2 survived). Both survivors are equivalent:
+  the `[]` that `fail` returns is discarded once an error exists, and the `netMinutes` rule message is never
+  shown because that rule never fails.
+- Deviation, put to Henri: inputs must be below 1,000,000,000,000 and have at most 4 decimal places. Without a
+  bound, decimal.js rounds long products before display rounding and can overstate a benefit (hourly 0.999… with
+  41 nines shows €1 of staff time), which breaks "displayed benefits never exceed the exact value". With the
+  bound every product fits in 48 digits, precision is 60, and the oracle property runs up to the limits.
+- Review: `review/01-20261028-1147.md`, 1 finding [P1]: exactly this deviation. Disposition: put to Henri.
+- Licences: direct dependencies MIT / Apache-2.0; dev-only transitive lightningcss (MPL-2.0) and caniuse-lite
+  (CC-BY-4.0) via Vite. `npm audit`: 0 after `overrides: { qs: 6.17.0 }` (Stryker → typed-rest-client pins qs 6.15.1).
+- Stryker + TypeScript 7: `tsconfigFile` points at a missing file so Stryker skips its tsconfig rewrite, which
+  needs the TypeScript JS API that TypeScript 7 no longer ships (see the comment in `stryker.config.mjs`).
+- Next: Henri decides the bound, looks at the page, confirms the commit; then commit on `auto/v1` and push it.
+- Uncommitted here: `.gitignore`, `CLAUDE.md`, `docs/spec.md`, this ticket, `docs/review/01-20261028-1147.md`,
+  `.claude/launch.json`, `index.html`, `package.json`, `package-lock.json`, `src/`, `stryker.config.mjs`,
+  `tsconfig.json`, `vite.config.ts`. Workspace repo (Henri decides): `~/claude/link-local-deps.sh`
+  (`proofloop/node_modules` line), `~/claude/tools/checks.json` (`"cmd": "npm test"`).
+
+20261028 — Henri: keep the input bound (review finding [P1] resolved: kept by decision); looked at the page; commit
+and push `auto/v1` approved. Workspace files (`link-local-deps.sh`, `checks.json`) not decided yet.
